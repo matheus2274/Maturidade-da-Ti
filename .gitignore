@@ -1,0 +1,34 @@
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+*.iml
+.idea/
+
+# Logs
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Local maven repository and build outputs
+.m2/
+.m2-home/
+.m2-repo/
+
+# IDE specific
+.vscode/
+
+# Others
+*.class
+
+# Ignore backend build outputs
+backend.err.log
+backend.out.log
