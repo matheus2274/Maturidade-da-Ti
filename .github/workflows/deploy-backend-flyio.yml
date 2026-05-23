@@ -17,10 +17,17 @@ jobs:
       - name: Install flyctl
         uses: superfly/flyctl-actions@v1
 
-      - name: Deploy with flyctl
+      - name: Ensure Fly app and deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          # Requires a pre-existing fly app and fly.toml in the repo.
-          # Create app locally with `fly launch` and add FLY_API_TOKEN to repo secrets.
-          flyctl deploy --config fly.toml --remote-only
+          set -e
+          cd backend
+          # Ensure flyctl can use the token from env
+          echo "Using fly API token (masked)"
+          # Create app if it does not exist
+          if ! flyctl apps list | grep -q maturidade-ti-backend; then
+            flyctl apps create maturidade-ti-backend || true
+          fi
+          # Deploy remotely using the Dockerfile in backend/
+          flyctl deploy --config fly.toml --remote-only -a maturidade-ti-backend

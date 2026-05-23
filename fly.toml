@@ -1,0 +1,11 @@
+app = "maturidade-ti-backend"
+
+[build]
+  image = "maturidade-ti-backend"
+
+[env]
+  SPRING_PROFILES_ACTIVE = "prod"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
