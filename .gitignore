@@ -23,6 +23,9 @@ Thumbs.db
 .m2-home/
 .m2-repo/
 
+# Runtime data
+data/
+
 # IDE specific
 .vscode/
 
