@@ -9,7 +9,6 @@ jobs:
   deploy:
     name: Deploy to Fly
     runs-on: ubuntu-latest
-    if: secrets.FLY_API_TOKEN != ''
 
     steps:
       - name: Checkout
