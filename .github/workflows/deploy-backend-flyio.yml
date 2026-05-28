@@ -29,5 +29,5 @@ jobs:
           if ! flyctl apps list | grep -q maturidade-ti-backend; then
             flyctl apps create maturidade-ti-backend || true
           fi
-          # Deploy remotely using the Dockerfile in backend/
-          flyctl deploy --config fly.toml --remote-only -a maturidade-ti-backend
+          # Deploy using the Dockerfile in backend/
+          flyctl deploy --config fly.toml -a maturidade-ti-backend
