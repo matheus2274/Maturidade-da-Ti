@@ -1,7 +1,7 @@
 app = "maturidade-ti-backend"
 
 [build]
-  image = "maturidade-ti-backend"
+  dockerfile = "Dockerfile"
 
 [env]
   SPRING_PROFILES_ACTIVE = "prod"
