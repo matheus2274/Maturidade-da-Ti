@@ -17,6 +17,7 @@ jobs:
       - name: Install flyctl
         run: |
           curl -L https://fly.io/install.sh | sh
+          echo "export PATH=\"$HOME/.fly/bin:$PATH\"" >> $GITHUB_ENV
 
       - name: Ensure Fly app and deploy
         env:
@@ -26,6 +27,7 @@ jobs:
           echo "flyctl version:"
           flyctl version
           echo "Using fly API token (masked)"
+          cd backend
           if ! flyctl apps list | grep -q maturidade-ti-backend; then
             flyctl apps create maturidade-ti-backend || true
           fi
