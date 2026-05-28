@@ -24,12 +24,14 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
           set -e
-          export PATH="$HOME/.fly/bin:$PATH"
+          FLYCTL="$HOME/.fly/bin/flyctl"
+          echo "flyctl path: $FLYCTL"
+          ls -l "$HOME/.fly/bin"
           echo "flyctl version:"
-          flyctl version
+          "$FLYCTL" version
           echo "Using fly API token (masked)"
           cd backend
-          if ! flyctl apps list | grep -q maturidade-ti-backend; then
-            flyctl apps create maturidade-ti-backend || true
+          if ! "$FLYCTL" apps list | grep -q maturidade-ti-backend; then
+            "$FLYCTL" apps create maturidade-ti-backend || true
           fi
-          flyctl deploy --config fly.toml -a maturidade-ti-backend
+          "$FLYCTL" deploy --config fly.toml -a maturidade-ti-backend
