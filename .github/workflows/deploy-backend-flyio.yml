@@ -30,7 +30,6 @@ jobs:
           echo "flyctl version:"
           "$FLYCTL" version
           echo "Using fly API token (masked)"
-          cd backend
           if ! "$FLYCTL" apps list | grep -q maturidade-ti-backend; then
             "$FLYCTL" apps create maturidade-ti-backend || true
           fi
