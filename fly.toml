@@ -5,6 +5,7 @@ app = "maturidade-ti-backend"
 
 [env]
   SPRING_PROFILES_ACTIVE = "prod"
+  SPRING_DATASOURCE_URL = "jdbc:h2:mem:maturidade_ti;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
   JAVA_TOOL_OPTIONS = "-Djava.net.preferIPv4Stack=true"
   JAVA_OPTS = "-Djava.net.preferIPv4Stack=true"
 

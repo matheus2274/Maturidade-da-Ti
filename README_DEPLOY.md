@@ -20,6 +20,6 @@ Secrets e variaveis
 - Opcionais no Fly, se quiser outro banco ou outro ajuste de ambiente: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `SPRING_DATASOURCE_DRIVER_CLASS_NAME`, `JWT_SECRET`, `JWT_EXPIRATION`
 
 Observacoes
-- O backend sobe com o fallback H2 definido em `application.properties`, mas isso nao oferece persistencia duravel no Fly sem volume ou banco externo.
+- No Fly, o `fly.toml` usa H2 em memoria para evitar travas de arquivo; os dados reiniciam quando a maquina reinicia.
 - O `fly.toml` força IPv4 no runtime para o Tomcat expor `0.0.0.0:8080`, que e o formato que o Fly precisa para rotear o app.
 - O `frontend/frontend-api.js` usa `http://localhost:8080/api/v1` no desenvolvimento local e a API publicada no Fly fora do ambiente local.
