@@ -5,6 +5,7 @@ app = "maturidade-ti-backend"
 
 [env]
   SPRING_PROFILES_ACTIVE = "prod"
+  JAVA_TOOL_OPTIONS = "-Djava.net.preferIPv4Stack=true"
 
 [[services]]
   internal_port = 8080
