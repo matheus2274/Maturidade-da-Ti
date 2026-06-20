@@ -1,38 +1,45 @@
-name: Deploy backend to Fly.io (template)
+name: Deploy backend to Fly.io
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - 'MaturidadeTI_Run/**'
+      - 'src/**'
+      - 'pom.xml'
+      - 'Dockerfile'
+      - 'fly.toml'
+      - 'README_DEPLOY.md'
+      - '.github/workflows/deploy-backend-flyio.yml'
   workflow_dispatch:
 
+concurrency:
+  group: fly-backend
+  cancel-in-progress: true
+
 jobs:
-  deploy:
-    name: Deploy to Fly
+  build-and-deploy:
     runs-on: ubuntu-latest
-
+    env:
+      FLY_APP_NAME: maturidade-ti-backend
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-      - name: Install flyctl
-        run: |
-          curl -L https://fly.io/install.sh | sh
-          echo "export PATH=\"$HOME/.fly/bin:$PATH\"" >> $GITHUB_ENV
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
 
-      - name: Ensure Fly app and deploy
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          FLYCTL_ACCESS_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          set -e
-          FLYCTL="$HOME/.fly/bin/flyctl"
-          echo "flyctl path: $FLYCTL"
-          ls -l "$HOME/.fly/bin"
-          echo "flyctl version:"
-          "$FLYCTL" version
-          echo "Using fly API token (masked)"
-          "$FLYCTL" auth token "$FLY_API_TOKEN"
-          if ! "$FLYCTL" apps list | grep -q maturidade-ti-backend; then
-            "$FLYCTL" apps create maturidade-ti-backend || true
-          fi
-          "$FLYCTL" deploy --config fly.toml -a maturidade-ti-backend
+      - name: Verify backend build
+        run: mvn -q -DskipTests package
+
+      - name: Set up flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only --config fly.toml --app "$FLY_APP_NAME"

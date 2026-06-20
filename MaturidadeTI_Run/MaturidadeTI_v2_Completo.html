@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MaturidadeTI v2.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:#0F6E56; --brand-l:#E1F5EE; --brand-m:#1D9E75; --brand-d:#085041;
+      --ink:#1a1a1a; --muted:#6b7280; --surface:#fff; --bg:#f4f6f4;
+      --border:rgba(0,0,0,0.10); --border2:rgba(0,0,0,0.18);
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--brand-d); display:none; flex-direction:column; padding:28px 0 20px; z-index:100; }
+    .s-logo { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:#9FE1CB; padding:0 22px 28px; border-bottom:.5px solid rgba(255,255,255,0.08); }
+    .s-logo span { color:#fff; }
+    .s-section { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.7px; color:rgba(159,225,203,0.4); padding:18px 22px 7px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:11px 22px; font-size:13px; color:rgba(255,255,255,0.6); cursor:pointer; border-left:3px solid transparent; transition:all .15s; }
+    .nav-item:hover { background:rgba(255,255,255,0.06); color:#fff; }
+    .nav-item.active { background:rgba(93,202,165,0.14); color:#5DCAA5; border-left-color:#5DCAA5; }
+    .nav-item svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; flex-shrink:0; }
+    .s-footer { margin-top:auto; padding:16px 22px; font-size:10px; color:rgba(159,225,203,0.3); line-height:1.6; }
+
+    /* ── MAIN ── */
+    .main { margin-left:0; min-height:100vh; padding:28px 32px; transition:margin-left .3s; }
+    .main.shifted { margin-left:220px; }
+    .page { display:none; }
+    .page.active { display:block; }
+
+    /* ── TOPBAR ── */
+    .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .page-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:var(--ink); }
+    .page-sub { font-size:13px; color:var(--muted); margin-top:2px; }
+
+    /* ── CARDS ── */
+    .card { background:var(--surface); border:.5px solid var(--border); border-radius:14px; padding:20px 22px; }
+    .card-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--ink); margin-bottom:14px; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+
+    /* ── FORMS ── */
+    .form-group { margin-bottom:14px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    .flabel { display:block; font-size:11px; font-weight:500; color:var(--muted); margin-bottom:5px; letter-spacing:.4px; text-transform:uppercase; }
+    .finput { width:100%; padding:9px 13px; border:.5px solid var(--border2); border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--ink); outline:none; transition:border-color .2s,box-shadow .2s; }
+    .finput:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(15,110,86,0.10); }
+    .finput.err { border-color:#E24B4A; }
+    select.finput { appearance:none; cursor:pointer; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230F6E56' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+    textarea.finput { resize:vertical; min-height:70px; }
+
+    /* ── BUTTONS ── */
+    .btn { padding:9px 20px; border-radius:9px; font-size:13px; font-family:'Syne',sans-serif; font-weight:500; cursor:pointer; border:none; transition:opacity .2s,transform .15s; }
+    .btn-primary { background:var(--brand); color:#fff; }
+    .btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-full { width:100%; }
+    .btn-outline { background:none; border:.5px solid var(--border2); color:var(--muted); font-size:12px; display:inline-flex; align-items:center; gap:6px; }
+    .btn-outline svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; }
+    .btn-danger { background:none; border:none; color:#A32D2D; font-size:12px; cursor:pointer; padding:4px 8px; border-radius:6px; font-family:'DM Sans',sans-serif; }
+    .btn-danger:hover { background:#FCEBEB; }
+
+    /* ── ALERTS ── */
+    .alert { border-radius:8px; padding:10px 14px; font-size:12px; }
+    .alert-ok { background:#E1F5EE; border:.5px solid #5DCAA5; color:#085041; display:none; margin-top:12px; text-align:center; }
+    .alert-err { background:#FCEBEB; border:.5px solid #F09595; color:#A32D2D; display:none; margin-bottom:12px; }
+
+    /* ── BADGES ── */
+    .badge { display:inline-block; font-size:10px; font-weight:500; padding:3px 9px; border-radius:20px; }
+    .b-ok { background:#E1F5EE; color:#085041; }
+    .b-pend { background:#FAEEDA; color:#633806; }
+    .b-inativo { background:#F1EFE8; color:#5F5E5A; }
+    .b-gov { background:#EEEDFE; color:#3C3489; }
+    .b-seg { background:#FCEBEB; color:#A32D2D; }
+    .b-inf { background:#E6F1FB; color:#0C447C; }
+    .b-dev { background:#EAF3DE; color:#27500A; }
+    .b-sup { background:#FAEEDA; color:#633806; }
+    .b-risco { background:#FBEAF0; color:#72243E; }
+    .b-nao { background:#FCEBEB; color:#A32D2D; }
+    .b-parc { background:#FAEEDA; color:#633806; }
+
+    /* ── MISC ── */
+    .avatar { width:32px; height:32px; border-radius:8px; background:var(--brand-l); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:500; color:var(--brand); margin-right:8px; vertical-align:middle; }
+    .count-pill { background:var(--brand-l); color:var(--brand); font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; }
+    .search-box { position:relative; }
+    .search-box .finput { padding-left:32px; font-size:12px; width:190px; }
+    .search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); opacity:.4; pointer-events:none; }
+    .empty { text-align:center; padding:40px; color:var(--muted); font-size:13px; }
+    .two-col { display:grid; grid-template-columns:360px 1fr; gap:22px; align-items:start; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .nivel-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+    .n1 { background:#639922; } .n2 { background:#BA7517; } .n3 { background:#E24B4A; }
+    .bar-row { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+    .bar-row:last-child { margin-bottom:0; }
+    .bar-lbl { font-size:11px; color:var(--muted); width:82px; flex-shrink:0; text-align:right; }
+    .bar-track { flex:1; height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:3px; }
+    .bar-pct { font-size:11px; font-weight:500; color:var(--ink); width:32px; text-align:right; }
+    .filters { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px; }
+    .fbtn { font-size:11px; font-weight:500; padding:5px 13px; border-radius:20px; border:.5px solid var(--border2); background:none; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; transition:all .15s; }
+    .fbtn.active, .fbtn:hover { background:var(--brand-l); color:var(--brand); border-color:var(--brand-m); }
+    .q-list { display:flex; flex-direction:column; gap:10px; max-height:440px; overflow-y:auto; padding-right:4px; }
+    .q-list::-webkit-scrollbar { width:4px; }
+    .q-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
+    .q-card { background:var(--surface); border:.5px solid var(--border); border-radius:10px; padding:13px 15px; }
+    .q-card:hover { border-color:var(--border2); }
+    .q-meta { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:6px; }
+    .framework { font-size:10px; color:var(--muted); font-style:italic; }
+
+    /* ── LOGIN ── */
+    #page-login { display:flex; align-items:center; justify-content:center; min-height:100vh; margin:-28px -32px; padding:32px; }
+    .login-box { display:flex; width:860px; max-width:98vw; min-height:520px; border-radius:18px; overflow:hidden; box-shadow:0 8px 40px rgba(8,80,65,0.13); }
+    .login-left { width:42%; background:var(--brand-d); padding:44px 38px; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden; }
+    .login-left::before { content:''; position:absolute; top:-70px; right:-70px; width:240px; height:240px; border-radius:50%; background:rgba(29,158,117,0.17); }
+    .login-left::after { content:''; position:absolute; bottom:-55px; left:-55px; width:190px; height:190px; border-radius:50%; background:rgba(159,225,203,0.09); }
+    .login-logo { font-family:'Syne',sans-serif; font-size:19px; font-weight:700; color:#9FE1CB; position:relative; z-index:1; }
+    .login-logo span { color:#fff; }
+    .login-hero { position:relative; z-index:1; }
+    .login-hero h2 { font-family:'Syne',sans-serif; font-size:26px; font-weight:700; color:#fff; line-height:1.2; margin-bottom:12px; }
+    .login-hero h2 em { color:#5DCAA5; font-style:normal; }
+    .login-hero p { font-size:12px; color:#9FE1CB; line-height:1.7; }
+    .jwt-box { background:rgba(93,202,165,0.11); border:.5px solid rgba(93,202,165,0.28); border-radius:10px; padding:12px 14px; position:relative; z-index:1; }
+    .jwt-box-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.6px; color:#5DCAA5; margin-bottom:8px; }
+    .jwt-item { display:flex; align-items:center; gap:7px; font-size:11px; color:#9FE1CB; margin-bottom:4px; }
+    .jwt-item:last-child { margin-bottom:0; }
+    .jwt-dot { width:5px; height:5px; border-radius:50%; background:#5DCAA5; flex-shrink:0; }
+    .login-dots { display:flex; gap:6px; position:relative; z-index:1; }
+    .ldot { width:7px; height:7px; border-radius:50%; background:rgba(159,225,203,0.25); }
+    .ldot.on { background:#5DCAA5; width:20px; border-radius:4px; }
+    .login-right { flex:1; background:var(--surface); padding:38px 44px; display:flex; flex-direction:column; justify-content:center; }
+    .tabs { display:flex; border-bottom:.5px solid var(--border); margin-bottom:24px; }
+    .tab { font-family:'Syne',sans-serif; font-size:14px; font-weight:500; padding:9px 18px 9px 0; cursor:pointer; color:var(--muted); border:none; background:none; border-bottom:2.5px solid transparent; margin-bottom:-.5px; transition:color .2s,border-color .2s; }
+    .tab.on { color:var(--brand); border-bottom-color:var(--brand); }
+    .form-title { font-family:'Syne',sans-serif; font-size:21px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+    .form-sub { font-size:13px; color:var(--muted); margin-bottom:22px; line-height:1.6; }
+    .perfis { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:6px; }
+    .perfil { border:.5px solid var(--border2); border-radius:9px; padding:11px; cursor:pointer; transition:border-color .15s,background .15s; }
+    .perfil:hover { border-color:var(--brand-m); background:var(--brand-l); }
+    .perfil.on { border-color:var(--brand); background:var(--brand-l); }
+    .perfil-icon { width:27px; height:27px; border-radius:6px; background:var(--brand); display:flex; align-items:center; justify-content:center; margin-bottom:6px; }
+    .perfil-icon svg { width:13px; height:13px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; }
+    .perfil-name { font-size:12px; font-weight:500; color:var(--ink); }
+    .perfil-desc { font-size:10px; color:var(--muted); line-height:1.4; }
+    .link-hint { text-align:center; font-size:13px; color:var(--muted); margin-top:14px; }
+    .link-hint a { color:var(--brand); text-decoration:none; font-weight:500; cursor:pointer; }
+    .lp { display:none; }
+    .lp.on { display:block; }
+    .pass-wrap { position:relative; }
+    .pass-toggle { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted); padding:2px; }
+    .pass-toggle svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; }
+    .token-box { background:var(--bg); border:.5px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:12px; display:none; }
+    .token-label { font-size:10px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px; }
+    .token-val { font-size:10px; color:var(--brand); font-family:monospace; word-break:break-all; line-height:1.5; }
+
+    /* ── DASHBOARD ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+    .kpi { background:var(--surface); border:.5px solid var(--border); border-radius:10px; padding:14px; }
+    .kpi-lbl { font-size:11px; color:var(--muted); margin-bottom:5px; }
+    .kpi-val { font-size:22px; font-weight:500; color:var(--ink); line-height:1; }
+    .kpi-delta { font-size:10px; margin-top:4px; display:flex; align-items:center; gap:3px; color:var(--muted); }
+    .delta-up { color:var(--brand); } .delta-dn { color:#A32D2D; }
+    .emp-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:.5px solid var(--border); }
+    .emp-row:last-child { border-bottom:none; }
+    .emp-left { display:flex; align-items:center; gap:9px; }
+    .emp-name { font-size:12px; font-weight:500; color:var(--ink); }
+    .emp-sec { font-size:10px; color:var(--muted); }
+    .score-pill { font-size:11px; font-weight:500; padding:3px 9px; border-radius:20px; }
+    .sp-ok { background:#E1F5EE; color:#085041; }
+    .sp-med { background:#FAEEDA; color:#633806; }
+    .sp-bad { background:#FCEBEB; color:#A32D2D; }
+    .crit-item { display:flex; align-items:center; gap:10px; background:var(--surface); border:.5px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px; }
+    .crit-item:last-child { margin-bottom:0; }
+    .crit-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .crit-badge { font-size:10px; font-weight:500; padding:2px 8px; border-radius:20px; white-space:nowrap; }
+
+    /* ── AVALIAÇÃO ── */
+    .sel-bar { background:var(--surface); border:.5px solid var(--border); border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .sel-lbl { font-size:11px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+    .prog-wrap { background:var(--surface); border:.5px solid var(--border); border-radius:12px; padding:14px 18px; margin-bottom:18px; display:none; }
+    .prog-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .prog-track { height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+    .prog-fill { height:100%; background:var(--brand); border-radius:3px; transition:width .4s; }
+    .prog-stats { display:flex; gap:14px; margin-top:8px; flex-wrap:wrap; }
+    .pstat { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+    .pstat-dot { width:7px; height:7px; border-radius:50%; }
+    .area-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+    .area-tab { font-size:11px; font-weight:500; padding:5px 12px; border-radius:20px; border:.5px solid var(--border2); background:none; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; transition:all .15s; }
+    .area-tab:hover { background:var(--brand-l); color:var(--brand); border-color:var(--brand-m); }
+    .area-tab.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+    .q-wrap { display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; }
+    .q-item { background:var(--surface); border:.5px solid var(--border); border-radius:12px; padding:15px 17px; }
+    .q-item.r-ok { border-left:3px solid #1D9E75; }
+    .q-item.r-parc { border-left:3px solid #BA7517; }
+    .q-item.r-nao { border-left:3px solid #E24B4A; }
+    .q-num { font-size:10px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px; }
+    .q-text { font-size:13px; color:var(--ink); line-height:1.6; margin-bottom:10px; }
+    .resp-opts { display:flex; gap:7px; margin-bottom:8px; }
+    .resp-btn { flex:1; padding:8px 10px; border-radius:8px; border:1.5px solid var(--border2); background:none; cursor:pointer; font-size:12px; font-family:'Syne',sans-serif; font-weight:500; color:var(--muted); transition:all .15s; text-align:center; }
+    .resp-btn.ok-b:hover, .resp-btn.ok-b.sel { background:#E1F5EE; border-color:#1D9E75; color:#085041; }
+    .resp-btn.parc-b:hover, .resp-btn.parc-b.sel { background:#FAEEDA; border-color:#BA7517; color:#633806; }
+    .resp-btn.nao-b:hover, .resp-btn.nao-b.sel { background:#FCEBEB; border-color:#E24B4A; color:#A32D2D; }
+    .obs-hint { font-size:11px; color:var(--muted); margin-bottom:4px; display:none; }
+    .obs-field { width:100%; padding:8px 11px; border:.5px solid var(--border2); border-radius:8px; font-size:12px; font-family:'DM Sans',sans-serif; background:var(--surface); color:var(--ink); resize:none; height:52px; outline:none; display:none; }
+    .obs-field:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(15,110,86,0.10); }
+    .finalizar-row { margin-top:18px; display:none; justify-content:flex-end; align-items:center; gap:12px; }
+    .btn-finalizar { background:var(--brand); color:#fff; padding:11px 26px; border-radius:10px; font-size:14px; font-family:'Syne',sans-serif; font-weight:700; cursor:pointer; border:none; transition:opacity .2s; }
+    .btn-finalizar:disabled { opacity:.4; cursor:not-allowed; }
+    .empty-state { text-align:center; padding:60px 20px; color:var(--muted); font-size:13px; }
+
+    /* ── RELATÓRIO ── */
+    .hero-rel { background:var(--brand-d); border-radius:14px; padding:24px 28px; margin-bottom:16px; display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .score-ring { width:84px; height:84px; flex-shrink:0; position:relative; }
+    .score-ring svg { width:84px; height:84px; }
+    .score-txt { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .score-num { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:#fff; line-height:1; }
+    .score-sub { font-size:10px; color:#9FE1CB; margin-top:2px; }
+    .hero-emp { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:#fff; margin-bottom:4px; }
+    .hero-meta { font-size:11px; color:#9FE1CB; margin-bottom:10px; }
+    .nivel-badge-rel { display:inline-block; padding:4px 14px; border-radius:20px; font-family:'Syne',sans-serif; font-size:12px; font-weight:700; }
+    .nb-efetiva { background:#E1F5EE; color:#085041; }
+    .nb-eficiente { background:#FAEEDA; color:#633806; }
+    .nb-artesanal { background:#FCEBEB; color:#A32D2D; }
+    .nb-estrategica { background:#EEEDFE; color:#3C3489; }
+    .hero-desc-rel { font-size:11px; color:#9FE1CB; margin-top:8px; line-height:1.6; max-width:480px; }
+    .hero-stats { display:flex; gap:18px; margin-top:12px; }
+    .hst { text-align:center; }
+    .hst-n { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; }
+    .hst-l { font-size:10px; color:#9FE1CB; margin-top:2px; }
+    .niveis-row { display:flex; gap:7px; }
+    .nivel-item { flex:1; border-radius:8px; padding:9px 7px; text-align:center; border:1.5px solid transparent; }
+    .nivel-item.ativo { transform:translateY(-2px); }
+    .nivel-name { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; margin-bottom:2px; }
+    .nivel-range { font-size:9px; opacity:.7; }
+    .nivel-desc-box { margin-top:10px; font-size:11px; color:var(--muted); line-height:1.6; padding:9px; background:var(--bg); border-radius:7px; }
+    .plano-wrap { overflow-x:auto; }
+    .plano-table { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+    .plano-table thead th { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); font-weight:500; padding:7px 10px; border-bottom:.5px solid var(--border); text-align:left; }
+    .plano-table tbody tr { border-bottom:.5px solid var(--border); transition:background .12s; }
+    .plano-table tbody tr:hover { background:var(--bg); }
+    .plano-table tbody tr:last-child { border-bottom:none; }
+    .plano-table td { padding:9px 10px; vertical-align:top; line-height:1.5; color:var(--ink); }
+    .pdot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:4px; }
+    .pd-alta { background:#E24B4A; } .pd-media { background:#BA7517; } .pd-baixa { background:#1D9E75; }
+    .btn-pdf { display:flex; align-items:center; gap:6px; background:var(--brand); color:#fff; border:none; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; font-family:'Syne',sans-serif; transition:opacity .2s; }
+    .btn-pdf:hover { opacity:.88; }
+    .btn-pdf svg { width:14px; height:14px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; }
+    .toast { background:#E1F5EE; border:.5px solid #5DCAA5; border-radius:8px; padding:9px 14px; font-size:12px; color:#085041; margin-bottom:14px; text-align:center; display:none; }
+
+    /* ── HISTÓRICO ── */
+    .hist-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .hist-table thead th { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); font-weight:500; padding:7px 10px; border-bottom:.5px solid var(--border); text-align:left; }
+    .hist-table tbody tr { border-bottom:.5px solid var(--border); transition:background .12s; }
+    .hist-table tbody tr:hover { background:var(--bg); }
+    .hist-table tbody tr:last-child { border-bottom:none; }
+    .hist-table td { padding:10px; vertical-align:middle; color:var(--ink); }
+    .dc-up { background:#E1F5EE; color:#085041; }
+    .dc-dn { background:#FCEBEB; color:#A32D2D; }
+    .dc-eq { background:var(--bg); color:var(--muted); }
+
+    @media (max-width:900px) {
+      .sidebar { width:60px; }
+      .s-logo, .s-section, .nav-item span, .s-footer { display:none; }
+      .nav-item { justify-content:center; padding:14px; }
+      .main.shifted { margin-left:60px; }
+      .two-col, .grid2, .kpi-grid { grid-template-columns:1fr; }
+      .login-left { display:none; }
+      .login-box { width:100%; }
+    }
+    @media print {
+      .sidebar, .btn-pdf, #page-login, #page-dashboard, #page-empresas, #page-questoes, #page-avaliacao, #page-historico { display:none !important; }
+      .main { margin-left:0 !important; padding:0; }
+      #page-relatorio { display:block !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="s-logo"><span>Maturidade</span>TI</div>
+  <div class="s-section">Principal</div>
+  <div class="nav-item" onclick="nav('dashboard')" id="nav-dashboard"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg><span>Dashboard</span></div>
+  <div class="nav-item" onclick="nav('empresas')" id="nav-empresas"><svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="10" rx="1.5"/><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M2 8h12"/></svg><span>Empresas</span></div>
+  <div class="nav-item" onclick="nav('questoes')" id="nav-questoes"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M6 6h4M6 9h4M6 12h2"/></svg><span>Questões</span></div>
+  <div class="nav-item" onclick="nav('avaliacao')" id="nav-avaliacao"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M5.5 8l2 2 3-3"/></svg><span>Avaliação</span></div>
+  <div class="nav-item" onclick="nav('relatorio')" id="nav-relatorio"><svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-6"/></svg><span>Relatório</span></div>
+  <div class="nav-item" onclick="nav('historico')" id="nav-historico"><svg viewBox="0 0 16 16"><path d="M8 3v5l3 3"/><circle cx="8" cy="8" r="6"/></svg><span>Histórico</span></div>
+  <div class="s-footer">MaturidadeTI v2.0<br>Trabalho acadêmico</div>
+</nav>
+
+<div class="main" id="main">
+
+  <!-- ═══ LOGIN ═══ -->
+  <div id="page-login" class="page active">
+    <div class="login-box">
+      <div class="login-left">
+        <div class="login-logo"><span>Maturidade</span>TI</div>
+        <div class="login-hero">
+          <h2>Acesso seguro com <em>autenticação JWT</em></h2>
+          <p>Tokens criptografados com expiração controlada. Cada perfil acessa apenas o que lhe é permitido.</p>
+        </div>
+        <div class="jwt-box">
+          <div class="jwt-box-title">Como funciona o JWT</div>
+          <div class="jwt-item"><div class="jwt-dot"></div>Usuário faz login com e-mail e senha</div>
+          <div class="jwt-item"><div class="jwt-dot"></div>Spring Security valida as credenciais</div>
+          <div class="jwt-item"><div class="jwt-dot"></div>Servidor gera token JWT assinado (HS256)</div>
+          <div class="jwt-item"><div class="jwt-dot"></div>Token enviado a cada requisição via header</div>
+          <div class="jwt-item"><div class="jwt-dot"></div>Back-end valida e autoriza o acesso</div>
+        </div>
+        <div class="login-dots"><div class="ldot on"></div><div class="ldot"></div><div class="ldot"></div></div>
+      </div>
+      <div class="login-right">
+        <div class="tabs">
+          <button class="tab on" onclick="switchLoginTab('entrar',this)">Entrar</button>
+          <button class="tab" onclick="switchLoginTab('cadastro',this)">Criar conta</button>
+        </div>
+        <div id="lp-entrar" class="lp on">
+          <div class="form-title">Bem-vindo de volta</div>
+          <div class="form-sub">Entre com suas credenciais para acessar o sistema</div>
+          <div class="alert alert-err" id="login-err">Preencha e-mail e senha.</div>
+          <div class="form-group"><label class="flabel">E-mail</label><input class="finput" id="login-email" type="email" placeholder="seu@email.com"/></div>
+          <div class="form-group"><label class="flabel">Senha</label>
+            <div class="pass-wrap"><input class="finput" id="login-senha" type="password" placeholder="••••••••"/>
+              <button class="pass-toggle" onclick="togglePass('login-senha')"><svg viewBox="0 0 16 16"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg></button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="fazerLogin()">Entrar na plataforma</button>
+          <div class="alert alert-ok" id="login-ok">Login realizado! Token JWT gerado com sucesso.</div>
+          <div class="token-box" id="token-box"><div class="token-label">Token JWT simulado</div><div class="token-val" id="token-val"></div></div>
+          <div class="link-hint">Não tem conta? <a onclick="switchLoginTab('cadastro',document.querySelectorAll('.tab')[1])">Criar agora</a></div>
+        </div>
+        <div id="lp-cadastro" class="lp">
+          <div class="form-title">Criar conta</div>
+          <div class="form-sub">Preencha os dados para se cadastrar</div>
+          <div class="alert alert-err" id="cad-err">Preencha todos os campos obrigatórios.</div>
+          <div class="form-row">
+            <div class="form-group"><label class="flabel">Nome *</label><input class="finput" id="cad-nome" placeholder="João"/></div>
+            <div class="form-group"><label class="flabel">Sobrenome *</label><input class="finput" id="cad-sobre" placeholder="Silva"/></div>
+          </div>
+          <div class="form-group"><label class="flabel">E-mail *</label><input class="finput" id="cad-email" type="email" placeholder="joao@empresa.com"/></div>
+          <div class="form-group"><label class="flabel">Senha *</label>
+            <div class="pass-wrap"><input class="finput" id="cad-senha" type="password" placeholder="Mínimo 8 caracteres"/>
+              <button class="pass-toggle" onclick="togglePass('cad-senha')"><svg viewBox="0 0 16 16"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg></button>
+            </div>
+          </div>
+          <div class="form-group"><label class="flabel">Perfil de acesso *</label>
+            <div class="perfis">
+              <div class="perfil on" onclick="selPerfil(this)"><div class="perfil-icon"><svg viewBox="0 0 16 16"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg></div><div class="perfil-name">Administrador</div><div class="perfil-desc">Acesso total</div></div>
+              <div class="perfil" onclick="selPerfil(this)"><div class="perfil-icon"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" rx="2"/><path d="M6 6h4M6 9h4M6 12h2"/></svg></div><div class="perfil-name">Avaliador</div><div class="perfil-desc">Aplica avaliações</div></div>
+              <div class="perfil" onclick="selPerfil(this)"><div class="perfil-icon"><svg viewBox="0 0 16 16"><path d="M2 12l4-4 3 3 5-6"/></svg></div><div class="perfil-name">Gestor</div><div class="perfil-desc">Visualiza relatórios</div></div>
+              <div class="perfil" onclick="selPerfil(this)"><div class="perfil-icon"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 3V2M11 3V2M2 7h12"/></svg></div><div class="perfil-name">Cliente</div><div class="perfil-desc">Empresa avaliada</div></div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" style="margin-top:12px" onclick="fazerCadastro()">Criar minha conta</button>
+          <div class="alert alert-ok" id="cad-ok">Conta criada! Redirecionando...</div>
+          <div class="link-hint">Já tem conta? <a onclick="switchLoginTab('entrar',document.querySelectorAll('.tab')[0])">Entrar</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div id="page-dashboard" class="page">
+    <div class="topbar"><div><div class="page-title">Dashboard</div><div class="page-sub">Visão geral da plataforma</div></div></div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-lbl">Empresas cadastradas</div><div class="kpi-val">12</div><div class="kpi-delta delta-up">+3 este mês</div></div>
+      <div class="kpi"><div class="kpi-lbl">Avaliações realizadas</div><div class="kpi-val">28</div><div class="kpi-delta delta-up">+7 este mês</div></div>
+      <div class="kpi"><div class="kpi-lbl">Score médio geral</div><div class="kpi-val" style="color:#0F6E56">61%</div><div class="kpi-delta delta-up">+4% vs. anterior</div></div>
+      <div class="kpi"><div class="kpi-lbl">Itens críticos abertos</div><div class="kpi-val" style="color:#A32D2D">34</div><div class="kpi-delta delta-dn">8 Não OK alta prioridade</div></div>
+    </div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="card"><div class="card-title">Score médio por área</div><div id="dash-bars"></div></div>
+      <div class="card"><div class="card-head"><div class="card-title">Empresas recentes</div></div><div id="dash-emps"></div></div>
+    </div>
+    <div class="card"><div class="card-head"><div class="card-title">Itens críticos — Não OK prioridade alta</div></div><div id="dash-crits"></div></div>
+  </div>
+
+  <!-- ═══ EMPRESAS ═══ -->
+  <div id="page-empresas" class="page">
+    <div class="topbar"><div><div class="page-title">Empresas clientes</div><div class="page-sub">Gerencie as empresas cadastradas</div></div></div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Nova empresa</div>
+        <div class="alert alert-err" id="emp-err">Preencha os campos obrigatórios.</div>
+        <div class="form-group"><label class="flabel">Razão social *</label><input class="finput" id="emp-razao" placeholder="Tech Solutions Ltda"/></div>
+        <div class="form-row">
+          <div class="form-group"><label class="flabel">CNPJ *</label><input class="finput" id="emp-cnpj" placeholder="00.000.000/0000-00" maxlength="18"/></div>
+          <div class="form-group"><label class="flabel">Setor *</label><select class="finput" id="emp-setor"><option value="">Selecione</option><option>Tecnologia</option><option>Saúde</option><option>Financeiro</option><option>Educação</option><option>Indústria</option><option>Comércio</option><option>Governo</option><option>Outro</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="flabel">Porte</label><select class="finput" id="emp-porte"><option value="">Selecione</option><option>Micro</option><option>Pequena</option><option>Média</option><option>Grande</option></select></div>
+          <div class="form-group"><label class="flabel">Status</label><select class="finput" id="emp-status"><option value="Ativo">Ativo</option><option value="Pendente">Pendente</option><option value="Inativo">Inativo</option></select></div>
+        </div>
+        <div class="form-group"><label class="flabel">Responsável *</label><input class="finput" id="emp-contato" placeholder="Nome do responsável"/></div>
+        <div class="form-row">
+          <div class="form-group"><label class="flabel">E-mail *</label><input class="finput" id="emp-email" type="email" placeholder="contato@empresa.com"/></div>
+          <div class="form-group"><label class="flabel">Telefone</label><input class="finput" id="emp-tel" placeholder="(71) 99999-9999"/></div>
+        </div>
+        <div class="form-group"><label class="flabel">Observações</label><textarea class="finput" id="emp-obs" placeholder="Informações adicionais..."></textarea></div>
+        <button class="btn btn-primary btn-full" onclick="cadEmpresa()">Cadastrar empresa</button>
+        <div class="alert alert-ok" id="emp-ok">Empresa cadastrada com sucesso!</div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink)">Empresas cadastradas</span><span class="count-pill" id="emp-count">2</span></div>
+          <div class="search-box"><span class="search-icon"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg></span><input class="finput" placeholder="Buscar..." oninput="filtrarEmp(this.value)"/></div>
+        </div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:.5px solid var(--border)"><th style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:500;padding:8px 10px;text-align:left">Empresa</th><th style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:500;padding:8px 10px;text-align:left">Setor</th><th style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:500;padding:8px 10px;text-align:left">Contato</th><th style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:500;padding:8px 10px;text-align:left">Status</th><th></th></tr></thead>
+          <tbody id="emp-tbody">
+            <tr data-nome="Grupo Alpha" style="border-bottom:.5px solid var(--border)"><td style="padding:10px"><span class="avatar">GA</span>Grupo Alpha</td><td style="padding:10px;color:var(--muted)">Financeiro</td><td style="padding:10px;color:var(--muted)">Carlos Lima</td><td style="padding:10px"><span class="badge b-ok">Ativo</span></td><td style="padding:10px"><button class="btn-danger" onclick="removerEmp(this)">Remover</button></td></tr>
+            <tr data-nome="Inova Saúde" style="border-bottom:.5px solid var(--border)"><td style="padding:10px"><span class="avatar">IS</span>Inova Saúde</td><td style="padding:10px;color:var(--muted)">Saúde</td><td style="padding:10px;color:var(--muted)">Ana Souza</td><td style="padding:10px"><span class="badge b-pend">Pendente</span></td><td style="padding:10px"><button class="btn-danger" onclick="removerEmp(this)">Remover</button></td></tr>
+          </tbody>
+        </table><div class="empty" id="emp-empty" style="display:none">Nenhuma empresa encontrada.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ QUESTÕES ═══ -->
+  <div id="page-questoes" class="page">
+    <div class="topbar"><div><div class="page-title">Banco de questões</div><div class="page-sub">Gerencie as perguntas por área</div></div></div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Nova questão</div>
+        <div class="alert alert-err" id="q-err">Preencha os campos obrigatórios.</div>
+        <div class="form-group"><label class="flabel">Área *</label><select class="finput" id="q-area"><option value="">Selecione</option><option value="gov">Governança de TI</option><option value="seg">Segurança da Informação</option><option value="inf">Infraestrutura</option><option value="dev">Desenvolvimento</option><option value="sup">Suporte</option><option value="risco">Gestão de Riscos</option></select></div>
+        <div class="form-group"><label class="flabel">Enunciado *</label><textarea class="finput" id="q-texto" placeholder="Ex: A empresa possui política formal de segurança?"></textarea></div>
+        <div class="form-group"><label class="flabel">Framework</label><select class="finput" id="q-fw"><option value="">Nenhum</option><option>COBIT</option><option>ISO 38.500</option><option>ITIL</option><option>ISO 20.000</option><option>ISO 27.001</option><option>LGPD / GDPR</option></select></div>
+        <div class="form-group"><label class="flabel">Criticidade *</label><select class="finput" id="q-nivel"><option value="">Selecione</option><option value="1">Baixo</option><option value="2">Médio</option><option value="3">Alto</option></select></div>
+        <div class="form-group"><label class="flabel">Evidência esperada</label><input class="finput" id="q-ev" placeholder="Ex: Ata de aprovação, política..."/></div>
+        <button class="btn btn-primary btn-full" onclick="addQuestao()">Adicionar questão</button>
+        <div class="alert alert-ok" id="q-ok">Questão adicionada!</div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Questões cadastradas</span><span class="count-pill" id="q-count">4</span></div>
+          <div class="search-box"><span class="search-icon"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg></span><input class="finput" placeholder="Buscar..." oninput="filtrarQ(this.value)"/></div>
+        </div>
+        <div class="filters">
+          <button class="fbtn active" onclick="filtrarArea('todos',this)">Todas</button>
+          <button class="fbtn" onclick="filtrarArea('gov',this)">Governança</button>
+          <button class="fbtn" onclick="filtrarArea('seg',this)">Segurança</button>
+          <button class="fbtn" onclick="filtrarArea('inf',this)">Infraestrutura</button>
+          <button class="fbtn" onclick="filtrarArea('dev',this)">Dev.</button>
+          <button class="fbtn" onclick="filtrarArea('sup',this)">Suporte</button>
+          <button class="fbtn" onclick="filtrarArea('risco',this)">Riscos</button>
+        </div>
+        <div class="q-list" id="q-list"></div>
+        <div class="empty" id="q-empty" style="display:none">Nenhuma questão encontrada.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ AVALIAÇÃO ═══ -->
+  <div id="page-avaliacao" class="page">
+    <div class="topbar"><div><div class="page-title">Realizar avaliação</div><div class="page-sub">Responda OK, Parcial ou Não OK para cada questão</div></div></div>
+    <div class="sel-bar">
+      <span class="sel-lbl">Empresa</span>
+      <select class="finput" id="sel-empresa" style="flex:1;min-width:180px"><option value="">Selecione a empresa...</option><option>Grupo Alpha</option><option>Inova Saúde</option><option>TecWise Sistemas</option></select>
+      <button class="btn btn-primary" onclick="iniciarAval()">Iniciar avaliação</button>
+    </div>
+    <div class="prog-wrap" id="prog-wrap">
+      <div class="prog-header"><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink)" id="prog-emp">—</span><span style="font-size:13px;font-weight:500;color:var(--brand)" id="prog-pct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-stats">
+        <div class="pstat"><div class="pstat-dot" style="background:#1D9E75"></div><span id="cnt-ok">0</span> OK</div>
+        <div class="pstat"><div class="pstat-dot" style="background:#BA7517"></div><span id="cnt-parc">0</span> Parcial</div>
+        <div class="pstat"><div class="pstat-dot" style="background:#E24B4A"></div><span id="cnt-nao">0</span> Não OK</div>
+        <div class="pstat"><div class="pstat-dot" style="background:#D3D1C7"></div><span id="cnt-pend">0</span> Pendentes</div>
+      </div>
+    </div>
+    <div class="area-tabs" id="area-tabs" style="display:none"></div>
+    <div id="q-wrap-aval" class="q-wrap"></div>
+    <div class="empty-state" id="aval-empty">Selecione uma empresa e clique em <strong>Iniciar avaliação</strong> para começar.</div>
+    <div class="finalizar-row" id="finalizar-row">
+      <span style="font-size:12px;color:var(--muted)" id="fin-hint"></span>
+      <button class="btn-finalizar" id="btn-fin" onclick="finalizarAval()" disabled>Gerar relatório →</button>
+    </div>
+  </div>
+
+  <!-- ═══ RELATÓRIO ═══ -->
+  <div id="page-relatorio" class="page">
+    <div class="topbar">
+      <div><div class="page-title">Relatório de maturidade</div><div class="page-sub">Score segmentado e plano de ação</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="nav('historico')"><svg viewBox="0 0 16 16"><path d="M8 3v5l3 3"/><circle cx="8" cy="8" r="6"/></svg>Histórico</button>
+        <button class="btn-pdf" onclick="exportPDF()"><svg viewBox="0 0 16 16"><path d="M4 2h6l4 4v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M10 2v4h4"/><path d="M6 9h4M8 7v4"/></svg>Exportar PDF</button>
+      </div>
+    </div>
+    <div class="toast" id="pdf-toast">PDF gerado! Em produção seria via JasperReports (Java Spring Boot).</div>
+    <div class="hero-rel">
+      <div class="score-ring">
+        <svg viewBox="0 0 84 84"><circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="7"/><circle cx="42" cy="42" r="36" fill="none" stroke="#5DCAA5" stroke-width="7" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="86" transform="rotate(-90 42 42)"/></svg>
+        <div class="score-txt"><div class="score-num" id="rel-score">62</div><div class="score-sub">pontos</div></div>
+      </div>
+      <div>
+        <div class="hero-emp" id="rel-emp">Grupo Alpha</div>
+        <div class="hero-meta" id="rel-meta">Avaliação realizada em 24/04/2026 · Avaliador: João Silva</div>
+        <span class="nivel-badge-rel nb-efetiva" id="rel-nivel-badge">Nível: Efetiva</span>
+        <div class="hero-desc-rel" id="rel-nivel-desc">A TI vai além da eficiência e alinha suas ações ao negócio, com processos bem definidos.</div>
+        <div class="hero-stats">
+          <div class="hst"><div class="hst-n" style="color:#5DCAA5" id="rel-ok">4</div><div class="hst-l">OK</div></div>
+          <div class="hst"><div class="hst-n" style="color:#FAC775" id="rel-parc">3</div><div class="hst-l">Parcial</div></div>
+          <div class="hst"><div class="hst-n" style="color:#F09595" id="rel-nao">3</div><div class="hst-l">Não OK</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="card"><div class="card-title">Score por área</div><div id="rel-areas"></div></div>
+      <div class="card"><div class="card-title">Nível de maturidade</div><div class="niveis-row" id="rel-niveis"></div><div class="nivel-desc-box" id="rel-nivel-info"></div></div>
+    </div>
+    <div class="card"><div class="card-title">Plano de ação — Parcial e Não OK</div><div class="plano-wrap"><table class="plano-table"><thead><tr><th style="width:32%">Questão</th><th style="width:14%">Área</th><th style="width:10%">Status</th><th style="width:11%">Prioridade</th><th>Ação sugerida</th></tr></thead><tbody id="rel-plano"></tbody></table></div></div>
+  </div>
+
+  <!-- ═══ HISTÓRICO ═══ -->
+  <div id="page-historico" class="page">
+    <div class="topbar"><div><div class="page-title">Histórico de avaliações</div><div class="page-sub">Evolução da maturidade ao longo do tempo</div></div></div>
+    <div class="sel-bar">
+      <span class="sel-lbl">Empresa</span>
+      <select class="finput" id="hist-emp" onchange="renderHist()" style="flex:1;min-width:160px">
+        <option value="0">Grupo Alpha</option><option value="1">Inova Saúde</option><option value="2">TecWise Sistemas</option>
+      </select>
+      <span class="sel-lbl">Período</span>
+      <select class="finput" id="hist-per" onchange="renderHist()" style="width:160px">
+        <option value="4">Últimos 4 ciclos</option><option value="3">Últimos 3 ciclos</option><option value="2">Últimos 2 ciclos</option>
+      </select>
+    </div>
+    <div class="kpi-grid" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-lbl">Avaliações</div><div class="kpi-val" id="h-total">4</div></div>
+      <div class="kpi"><div class="kpi-lbl">Score inicial</div><div class="kpi-val" id="h-ini">42%</div></div>
+      <div class="kpi"><div class="kpi-lbl">Score atual</div><div class="kpi-val" style="color:#0F6E56" id="h-atu">62%</div></div>
+      <div class="kpi"><div class="kpi-lbl">Evolução total</div><div class="kpi-val delta-up" id="h-evo">+20%</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-head"><div class="card-title">Evolução do score geral</div><div style="display:flex;gap:14px"><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#0F6E56"></div>Score</div><div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#E1F5EE;border:.5px solid #1D9E75"></div>Meta 70%</div></div></div>
+      <canvas id="hist-chart" height="160" style="width:100%"></canvas>
+      <div style="display:flex;justify-content:space-around;margin-top:4px" id="hist-xlabels"></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="card-title">Score por área — ciclo atual</div><div id="hist-areas"></div></div>
+      <div class="card"><div class="card-title">Histórico de ciclos</div><table class="hist-table"><thead><tr><th>Ciclo</th><th>Data</th><th>Score</th><th>Nível</th><th>Var.</th></tr></thead><tbody id="hist-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── DADOS ── */
+const areaMap={gov:{l:'Governança',cls:'b-gov'},seg:{l:'Segurança',cls:'b-seg'},inf:{l:'Infraestrutura',cls:'b-inf'},dev:{l:'Desenvolvimento',cls:'b-dev'},sup:{l:'Suporte',cls:'b-sup'},risco:{l:'Riscos',cls:'b-risco'}};
+const nivelMap={1:{cls:'n1'},2:{cls:'n2'},3:{cls:'n3'}};
+const niveisInfo=[
+  {k:'artesanal',l:'Artesanal',r:'0–39%',bg:'#FCEBEB',c:'#A32D2D',desc:'Processos manuais sem sistemas de apoio. A TI opera de forma reativa e sem padronização.'},
+  {k:'eficiente',l:'Eficiente',r:'40–59%',bg:'#FAEEDA',c:'#633806',desc:'Atende às necessidades básicas com processos parcialmente digitalizados.'},
+  {k:'efetiva',l:'Efetiva',r:'60–79%',bg:'#E1F5EE',c:'#085041',desc:'A TI vai além da eficiência e alinha suas ações ao negócio, com processos bem definidos.'},
+  {k:'estrategica',l:'Estratégica',r:'80–100%',bg:'#EEEDFE',c:'#3C3489',desc:'A TI participa das decisões estratégicas e é vista como diferencial competitivo.'},
+];
+let questoes=[
+  {id:1,area:'gov',texto:'A empresa possui uma política de governança de TI formalmente aprovada pela diretoria?',fw:'COBIT',nivel:2,ev:'Documento de política, ata de aprovação'},
+  {id:2,area:'gov',texto:'Existe um comitê de TI que participa das decisões estratégicas da empresa?',fw:'ISO 38.500',nivel:2,ev:'Ata de reuniões, organograma'},
+  {id:3,area:'seg',texto:'Existe uma política de segurança da informação documentada e comunicada a todos os colaboradores?',fw:'ISO 27.001',nivel:3,ev:'Política documentada, registros de treinamento'},
+  {id:4,area:'seg',texto:'A empresa realiza backups regulares com testes de restauração documentados?',fw:'ISO 27.001',nivel:3,ev:'Log de backups, relatório de testes'},
+  {id:5,area:'seg',texto:'Os acessos aos sistemas críticos são controlados por autenticação multifator?',fw:'LGPD / GDPR',nivel:3,ev:'Configuração de MFA, relatório de acessos'},
+  {id:6,area:'inf',texto:'A infraestrutura de TI possui monitoramento contínuo de disponibilidade e desempenho?',fw:'ITIL',nivel:2,ev:'Relatórios de monitoramento, dashboards'},
+  {id:7,area:'inf',texto:'Existe um plano de continuidade de negócios (BCP) atualizado e testado?',fw:'ISO 20.000',nivel:3,ev:'Documento BCP, relatório de simulação'},
+  {id:8,area:'dev',texto:'O processo de desenvolvimento segue metodologia formal (Scrum, Kanban ou similar)?',fw:'',nivel:1,ev:'Documentação de processo, ferramentas de gestão'},
+  {id:9,area:'sup',texto:'Existe um processo formal de gestão de chamados com SLA definido e monitorado?',fw:'ITIL',nivel:2,ev:'Sistema de chamados, relatório de SLA'},
+  {id:10,area:'risco',texto:'A organização realiza análise de riscos de TI periodicamente com registro formal dos resultados?',fw:'ISO 27.001',nivel:3,ev:'Matriz de riscos atualizada'},
+];
+let qId=11, respostas={}, areaAtivaAval='todos', empAval='', filtroQ='todos', buscaQ='';
+
+/* ── NAVEGAÇÃO ── */
+function nav(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const ni=document.getElementById('nav-'+p);
+  if(ni)ni.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ── LOGIN ── */
+function switchLoginTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.lp').forEach(p=>p.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('lp-'+id).classList.add('on');
+}
+function selPerfil(el){document.querySelectorAll('.perfil').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
+function togglePass(id){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';}
+function gerarToken(email,role){
+  const h=btoa(JSON.stringify({alg:'HS256',typ:'JWT'})).replace(/=/g,'');
+  const p=btoa(JSON.stringify({sub:email,role,iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+3600})).replace(/=/g,'');
+  const s=btoa('sig_simulada').replace(/=/g,'').substring(0,43);
+  return `${h}.${p}.${s}`;
+}
+function entrar(){
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('main').classList.add('shifted');
+  nav('dashboard');
+}
+function fazerLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const senha=document.getElementById('login-senha').value;
+  const err=document.getElementById('login-err');
+  const ok=document.getElementById('login-ok');
+  const box=document.getElementById('token-box');
+  err.style.display='none';ok.style.display='none';box.style.display='none';
+  if(!email||!senha){err.textContent='Preencha e-mail e senha.';err.style.display='block';return;}
+  if(senha.length<6){err.textContent='Senha muito curta.';err.style.display='block';return;}
+  ok.style.display='block';
+  document.getElementById('token-val').textContent=gerarToken(email,'ROLE_ADMIN');
+  box.style.display='block';
+  setTimeout(entrar,1800);
+}
+function fazerCadastro(){
+  const nome=document.getElementById('cad-nome').value.trim();
+  const sobre=document.getElementById('cad-sobre').value.trim();
+  const email=document.getElementById('cad-email').value.trim();
+  const senha=document.getElementById('cad-senha').value;
+  const err=document.getElementById('cad-err');
+  const ok=document.getElementById('cad-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!nome||!sobre||!email||!senha){err.style.display='block';return;}
+  if(senha.length<8){err.textContent='Senha deve ter ao menos 8 caracteres.';err.style.display='block';return;}
+  ok.style.display='block';
+  setTimeout(entrar,1500);
+}
+
+/* ── DASHBOARD ── */
+function initDash(){
+  const areas=[{l:'Governança',p:72,c:'#0F6E56'},{l:'Infraestrutura',p:68,c:'#1D9E75'},{l:'Suporte',p:61,c:'#1D9E75'},{l:'Desenvolvimento',p:58,c:'#BA7517'},{l:'Riscos',p:47,c:'#BA7517'},{l:'Segurança',p:38,c:'#E24B4A'}];
+  const bEl=document.getElementById('dash-bars');
+  bEl.innerHTML='';
+  areas.forEach(a=>bEl.innerHTML+=`<div class="bar-row"><div class="bar-lbl">${a.l}</div><div class="bar-track"><div class="bar-fill" style="width:${a.p}%;background:${a.c}"></div></div><div class="bar-pct">${a.p}%</div></div>`);
+  const emps=[{i:'GA',n:'Grupo Alpha',s:'Financeiro',sc:72},{i:'IS',n:'Inova Saúde',s:'Saúde',sc:55},{i:'TW',n:'TecWise',s:'Tecnologia',sc:38},{i:'BR',n:'BrasCom',s:'Indústria',sc:64}];
+  const eEl=document.getElementById('dash-emps');
+  eEl.innerHTML='';
+  emps.forEach(e=>{const sc=e.sc>=65?'sp-ok':e.sc>=50?'sp-med':'sp-bad';eEl.innerHTML+=`<div class="emp-row"><div class="emp-left"><div class="avatar">${e.i}</div><div><div class="emp-name">${e.n}</div><div class="emp-sec">${e.s}</div></div></div><div style="display:flex;gap:8px;align-items:center"><span class="score-pill ${sc}">${e.sc}%</span></div></div>`;});
+  const crits=[{t:'Política de segurança não implementada',e:'Inova Saúde',p:'Alta',c:'#E24B4A'},{t:'Autenticação multifator ausente',e:'TecWise',p:'Alta',c:'#E24B4A'},{t:'Análise de riscos sem registro formal',e:'BrasCom',p:'Alta',c:'#E24B4A'},{t:'BCP desatualizado',e:'Inova Saúde',p:'Média',c:'#BA7517'}];
+  const cEl=document.getElementById('dash-crits');
+  cEl.innerHTML='';
+  crits.forEach(c=>{const bc=c.p==='Alta'?'background:#FCEBEB;color:#A32D2D':'background:#FAEEDA;color:#633806';cEl.innerHTML+=`<div class="crit-item"><div class="crit-dot" style="background:${c.c}"></div><div style="flex:1"><div style="font-size:12px;color:var(--ink)">${c.t}</div><div style="font-size:10px;color:var(--muted)">${c.e}</div></div><span class="crit-badge" style="${bc}">${c.p}</span></div>`;});
+}
+
+/* ── EMPRESAS ── */
+function mascaraCNPJ(v){v=v.replace(/\D/g,'');v=v.replace(/^(\d{2})(\d)/,'$1.$2');v=v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');v=v.replace(/\.(\d{3})(\d)/,'.$1/$2');v=v.replace(/(\d{4})(\d)/,'$1-$2');return v;}
+document.getElementById('emp-cnpj').addEventListener('input',function(){this.value=mascaraCNPJ(this.value);});
+function iniciais(n){return n.trim().split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();}
+function badgeCls(s){return s==='Ativo'?'b-ok':s==='Inativo'?'b-inativo':'b-pend';}
+function cadEmpresa(){
+  const razao=document.getElementById('emp-razao').value.trim();
+  const cnpj=document.getElementById('emp-cnpj').value.trim();
+  const setor=document.getElementById('emp-setor').value;
+  const contato=document.getElementById('emp-contato').value.trim();
+  const email=document.getElementById('emp-email').value.trim();
+  const status=document.getElementById('emp-status').value;
+  const err=document.getElementById('emp-err');
+  const ok=document.getElementById('emp-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!razao||!cnpj||!setor||!contato||!email){err.style.display='block';return;}
+  const tbody=document.getElementById('emp-tbody');
+  const tr=document.createElement('tr');
+  tr.setAttribute('data-nome',razao);
+  tr.style='border-bottom:.5px solid var(--border)';
+  tr.innerHTML=`<td style="padding:10px"><span class="avatar">${iniciais(razao)}</span>${razao}</td><td style="padding:10px;color:var(--muted)">${setor}</td><td style="padding:10px;color:var(--muted)">${contato}</td><td style="padding:10px"><span class="badge ${badgeCls(status)}">${status}</span></td><td style="padding:10px"><button class="btn-danger" onclick="removerEmp(this)">Remover</button></td>`;
+  tbody.appendChild(tr);
+  const sel=document.getElementById('sel-empresa');
+  const opt=document.createElement('option');
+  opt.textContent=razao;sel.appendChild(opt);
+  atualizarEmpCount();
+  ok.style.display='block';
+  ['emp-razao','emp-cnpj','emp-contato','emp-email','emp-tel','emp-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('emp-setor').value='';document.getElementById('emp-porte').value='';document.getElementById('emp-status').value='Ativo';
+  setTimeout(()=>ok.style.display='none',3000);
+}
+function removerEmp(btn){btn.closest('tr').remove();atualizarEmpCount();}
+function atualizarEmpCount(){const n=document.getElementById('emp-tbody').rows.length;document.getElementById('emp-count').textContent=n;document.getElementById('emp-empty').style.display=n===0?'block':'none';}
+function filtrarEmp(q){const rows=document.getElementById('emp-tbody').rows;let v=0;Array.from(rows).forEach(r=>{const m=r.getAttribute('data-nome').toLowerCase().includes(q.toLowerCase());r.style.display=m?'':'none';if(m)v++;});document.getElementById('emp-empty').style.display=v===0?'block':'none';}
+
+/* ── QUESTÕES ── */
+function renderQ(){
+  const list=document.getElementById('q-list');list.innerHTML='';
+  const filtradas=questoes.filter(q=>(filtroQ==='todos'||q.area===filtroQ)&&q.texto.toLowerCase().includes(buscaQ.toLowerCase()));
+  document.getElementById('q-count').textContent=questoes.length;
+  if(filtradas.length===0){document.getElementById('q-empty').style.display='block';return;}
+  document.getElementById('q-empty').style.display='none';
+  filtradas.forEach(q=>{
+    const a=areaMap[q.area];const n=nivelMap[q.nivel];
+    const div=document.createElement('div');div.className='q-card';
+    div.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px"><div style="font-size:13px;color:var(--ink);line-height:1.5;flex:1">${q.texto}</div><button class="btn-danger" onclick="removerQ(${q.id})">&#10005;</button></div><div class="q-meta"><span class="badge ${a.cls}">${a.l}</span><span class="nivel-dot ${n.cls}"></span><span style="font-size:11px;color:var(--muted)">${q.nivel===1?'Baixo':q.nivel===2?'Médio':'Alto'}</span>${q.fw?`<span class="framework">${q.fw}</span>`:''}</div>${q.ev?`<div style="margin-top:5px;font-size:11px;color:var(--muted)">Evidência: ${q.ev}</div>`:''}`;
+    list.appendChild(div);
+  });
+}
+function addQuestao(){
+  const area=document.getElementById('q-area').value;const texto=document.getElementById('q-texto').value.trim();
+  const fw=document.getElementById('q-fw').value;const nivel=document.getElementById('q-nivel').value;const ev=document.getElementById('q-ev').value.trim();
+  const err=document.getElementById('q-err');const ok=document.getElementById('q-ok');
+  err.style.display='none';ok.style.display='none';
+  if(!area||!texto||!nivel){err.style.display='block';return;}
+  questoes.push({id:qId++,area,texto,fw,nivel:parseInt(nivel),ev});
+  renderQ();ok.style.display='block';
+  ['q-area','q-texto','q-fw','q-nivel','q-ev'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>ok.style.display='none',3000);
+}
+function removerQ(id){questoes=questoes.filter(q=>q.id!==id);renderQ();}
+function filtrarArea(area,btn){filtroQ=area;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderQ();}
+function filtrarQ(v){buscaQ=v;renderQ();}
+
+/* ── AVALIAÇÃO ── */
+function iniciarAval(){
+  const sel=document.getElementById('sel-empresa');
+  if(!sel.value){sel.style.borderColor='#E24B4A';setTimeout(()=>sel.style.borderColor='',1500);return;}
+  empAval=sel.value;respostas={};areaAtivaAval='todos';
+  document.getElementById('prog-wrap').style.display='block';
+  document.getElementById('prog-emp').textContent=empAval;
+  document.getElementById('area-tabs').style.display='flex';
+  document.getElementById('aval-empty').style.display='none';
+  document.getElementById('finalizar-row').style.display='flex';
+  renderAreaTabs();renderQAval();atualizarProg();
+}
+function renderAreaTabs(){
+  const tabs=document.getElementById('area-tabs');tabs.innerHTML='';
+  ['todos',...[...new Set(questoes.map(q=>q.area))]].forEach(a=>{
+    const btn=document.createElement('button');btn.className='area-tab'+(a===areaAtivaAval?' active':'');
+    const count=a==='todos'?questoes.length:questoes.filter(q=>q.area===a).length;
+    btn.innerHTML=(a==='todos'?'Todas':areaMap[a].l)+`<span style="font-size:10px;margin-left:4px;opacity:.7">(${count})</span>`;
+    btn.onclick=()=>{areaAtivaAval=a;renderAreaTabs();renderQAval();};
+    tabs.appendChild(btn);
+  });
+}
+function renderQAval(){
+  const wrap=document.getElementById('q-wrap-aval');wrap.innerHTML='';
+  const lista=areaAtivaAval==='todos'?questoes:questoes.filter(q=>q.area===areaAtivaAval);
+  lista.forEach((q,i)=>{
+    const resp=respostas[q.id];
+    let cls='q-item';if(resp==='ok')cls+=' r-ok';else if(resp==='parc')cls+=' r-parc';else if(resp==='nao')cls+=' r-nao';
+    const mostra=resp==='parc'||resp==='nao';
+    const div=document.createElement('div');div.className=cls;div.id='qi-'+q.id;
+    div.innerHTML=`<div class="q-num">Questão ${i+1} de ${lista.length}</div><div class="q-text">${q.texto}</div><div class="q-meta" style="margin-bottom:10px"><span class="badge ${areaMap[q.area].cls}">${areaMap[q.area].l}</span><span class="nivel-dot ${nivelMap[q.nivel].cls}"></span>${q.fw?`<span class="framework">${q.fw}</span>`:''}</div><div class="resp-opts"><button class="resp-btn ok-b${resp==='ok'?' sel':''}" onclick="responder(${q.id},'ok',this)">✔ OK</button><button class="resp-btn parc-b${resp==='parc'?' sel':''}" onclick="responder(${q.id},'parc',this)">◑ Parcial</button><button class="resp-btn nao-b${resp==='nao'?' sel':''}" onclick="responder(${q.id},'nao',this)">✘ Não OK</button></div>${q.ev?`<div class="obs-hint" id="hint-${q.id}" style="display:${mostra?'block':'none'}">Evidência esperada: <em>${q.ev}</em></div>`:''}${mostra||resp?`<textarea class="obs-field" id="obs-${q.id}" placeholder="Descreva a situação ou plano de ação..." style="display:${mostra?'block':'none'}"></textarea>`:''}`;
+    wrap.appendChild(div);
+  });
+}
+function responder(id,resp,btn){
+  respostas[id]=resp;
+  const item=document.getElementById('qi-'+id);
+  item.className='q-item r-'+(resp==='ok'?'ok':resp==='parc'?'parc':'nao');
+  item.querySelectorAll('.resp-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');
+  const obs=document.getElementById('obs-'+id);const hint=document.getElementById('hint-'+id);
+  const m=resp==='parc'||resp==='nao';
+  if(!obs){
+    const q=questoes.find(q=>q.id===id);
+    if(q&&q.ev&&hint){}
+    const newObs=document.createElement('textarea');newObs.className='obs-field';newObs.id='obs-'+id;newObs.placeholder='Descreva a situação ou plano de ação...';newObs.style.display=m?'block':'none';item.appendChild(newObs);
+  } else { obs.style.display=m?'block':'none'; }
+  if(hint)hint.style.display=m?'block':'none';
+  atualizarProg();
+}
+function atualizarProg(){
+  const total=questoes.length;
+  const ok=Object.values(respostas).filter(r=>r==='ok').length;
+  const parc=Object.values(respostas).filter(r=>r==='parc').length;
+  const nao=Object.values(respostas).filter(r=>r==='nao').length;
+  const pend=total-ok-parc-nao;const pct=Math.round(((ok+parc+nao)/total)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('cnt-ok').textContent=ok;document.getElementById('cnt-parc').textContent=parc;document.getElementById('cnt-nao').textContent=nao;document.getElementById('cnt-pend').textContent=pend;
+  const btn=document.getElementById('btn-fin');const hint=document.getElementById('fin-hint');
+  if(pend===0){btn.disabled=false;hint.textContent='Todas respondidas!';hint.style.color='#0F6E56';}
+  else{btn.disabled=true;hint.textContent=`${pend} pendente(s)`;hint.style.color='var(--muted)';}
+}
+function finalizarAval(){
+  const ok=Object.values(respostas).filter(r=>r==='ok').length;
+  const parc=Object.values(respostas).filter(r=>r==='parc').length;
+  const nao=Object.values(respostas).filter(r=>r==='nao').length;
+  const score=Math.round(((ok*2+parc)/(questoes.length*2))*100);
+  document.getElementById('rel-score').textContent=score;
+  document.getElementById('rel-emp').textContent=empAval;
+  document.getElementById('rel-ok').textContent=ok;
+  document.getElementById('rel-parc').textContent=parc;
+  document.getElementById('rel-nao').textContent=nao;
+  initRelatorio(score,ok,parc,nao);nav('relatorio');
+}
+
+/* ── RELATÓRIO ── */
+function initRelatorio(score,ok,parc,nao){
+  const areas2=[{l:'Governança',p:70,c:'#0F6E56'},{l:'Infraestrutura',p:75,c:'#0F6E56'},{l:'Desenvolvimento',p:80,c:'#1D9E75'},{l:'Suporte',p:60,c:'#BA7517'},{l:'Riscos',p:45,c:'#BA7517'},{l:'Segurança',p:40,c:'#E24B4A'}];
+  const aEl=document.getElementById('rel-areas');aEl.innerHTML='';
+  areas2.forEach(a=>aEl.innerHTML+=`<div class="bar-row"><div class="bar-lbl">${a.l}</div><div class="bar-track"><div class="bar-fill" style="width:${a.p}%;background:${a.c}"></div></div><div class="bar-pct">${a.p}%</div></div>`);
+  const nivelKey=score<40?'artesanal':score<60?'eficiente':score<80?'efetiva':'estrategica';
+  const ni=niveisInfo.find(n=>n.k===nivelKey);
+  document.getElementById('rel-nivel-badge').textContent='Nível: '+ni.l;
+  document.getElementById('rel-nivel-badge').className='nivel-badge-rel nb-'+nivelKey;
+  document.getElementById('rel-nivel-desc').textContent=ni.desc;
+  const nEl=document.getElementById('rel-niveis');const dEl=document.getElementById('rel-nivel-info');nEl.innerHTML='';
+  niveisInfo.forEach(n=>{const ativo=n.k===nivelKey;nEl.innerHTML+=`<div class="nivel-item${ativo?' ativo':''}" style="background:${n.bg};border-color:${ativo?n.c:'transparent'}"><div class="nivel-name" style="color:${n.c}">${n.l}</div><div class="nivel-range" style="color:${n.c}">${n.r}</div></div>`;if(ativo)dEl.textContent=ni.desc;});
+  const plano=[{q:'Política de segurança da informação',a:'Segurança',s:'nao',p:'alta',acao:'Elaborar e aprovar política formal com treinamento obrigatório.'},{q:'Autenticação multifator nos sistemas críticos',a:'Segurança',s:'nao',p:'alta',acao:'Implementar MFA em todos os acessos críticos.'},{q:'Análise de riscos com registro formal',a:'Riscos',s:'nao',p:'alta',acao:'Criar matriz de riscos com responsável e revisão trimestral.'},{q:'Comitê de TI para decisões estratégicas',a:'Governança',s:'parc',p:'media',acao:'Formalizar comitê com atas e reuniões mensais.'},{q:'Plano de continuidade de negócios (BCP)',a:'Infraestrutura',s:'parc',p:'media',acao:'Revisar BCP e agendar simulação para validação.'},{q:'Gestão de chamados com SLA definido',a:'Suporte',s:'parc',p:'baixa',acao:'Definir SLAs por categoria e configurar alertas.'}];
+  const pEl=document.getElementById('rel-plano');pEl.innerHTML='';
+  plano.forEach(p=>{const pc=p.p==='alta'?'pd-alta':p.p==='media'?'pd-media':'pd-baixa';const sc=p.s==='nao'?'b-nao':'b-parc';const sl=p.s==='nao'?'Não OK':'Parcial';pEl.innerHTML+=`<tr><td>${p.q}</td><td>${p.a}</td><td><span class="badge ${sc}">${sl}</span></td><td><span class="pdot ${pc}"></span>${p.p.charAt(0).toUpperCase()+p.p.slice(1)}</td><td style="color:var(--muted)">${p.acao}</td></tr>`;});
+}
+function exportPDF(){const t=document.getElementById('pdf-toast');t.style.display='block';setTimeout(()=>t.style.display='none',4000);}
+initRelatorio(62,4,3,3);
+
+/* ── HISTÓRICO ── */
+const histEmpresas=[
+  {n:'Grupo Alpha',ciclos:[{l:'Q1 2025',d:'10/01/2025',s:42,n:'Eficiente'},{l:'Q2 2025',d:'15/04/2025',s:51,n:'Eficiente'},{l:'Q3 2025',d:'08/07/2025',s:57,n:'Eficiente'},{l:'Q4 2025',d:'24/04/2026',s:62,n:'Efetiva'}]},
+  {n:'Inova Saúde',ciclos:[{l:'Q1 2025',d:'20/01/2025',s:35,n:'Artesanal'},{l:'Q2 2025',d:'22/04/2025',s:42,n:'Eficiente'},{l:'Q3 2025',d:'15/07/2025',s:48,n:'Eficiente'},{l:'Q4 2025',d:'18/10/2025',s:55,n:'Eficiente'}]},
+  {n:'TecWise',ciclos:[{l:'Q2 2025',d:'01/05/2025',s:28,n:'Artesanal'},{l:'Q3 2025',d:'10/08/2025',s:33,n:'Artesanal'},{l:'Q4 2025',d:'05/11/2025',s:38,n:'Artesanal'},{l:'Q1 2026',d:'24/04/2026',s:44,n:'Eficiente'}]},
+];
+const nivelCor=n=>n==='Artesanal'?'background:#FCEBEB;color:#A32D2D':n==='Eficiente'?'background:#FAEEDA;color:#633806':n==='Efetiva'?'background:#E1F5EE;color:#085041':'background:#EEEDFE;color:#3C3489';
+function renderHist(){
+  const ei=parseInt(document.getElementById('hist-emp').value);
+  const per=parseInt(document.getElementById('hist-per').value);
+  const emp=histEmpresas[ei];const ciclos=emp.ciclos.slice(-per);
+  const ini=ciclos[0].s;const atu=ciclos[ciclos.length-1].s;const evo=atu-ini;
+  document.getElementById('h-total').textContent=ciclos.length;
+  document.getElementById('h-ini').textContent=ini+'%';
+  document.getElementById('h-atu').textContent=atu+'%';
+  document.getElementById('h-evo').textContent=(evo>=0?'+':'')+evo+'%';
+  document.getElementById('h-evo').className='kpi-val '+(evo>=0?'delta-up':'delta-dn');
+
+  const xlEl=document.getElementById('hist-xlabels');xlEl.innerHTML='';
+  ciclos.forEach(c=>xlEl.innerHTML+=`<div style="font-size:10px;color:var(--muted);flex:1;text-align:center">${c.l}</div>`);
+
+  const canvas=document.getElementById('hist-chart');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||560;const H=160;
+  canvas.width=W;canvas.height=H;ctx.clearRect(0,0,W,H);
+  const pad={t:16,b:8,l:34,r:12};const cw=W-pad.l-pad.r;const ch=H-pad.t-pad.b;
+  const scores=ciclos.map(c=>c.s);const minS=Math.max(0,Math.min(...scores)-10);const maxS=Math.min(100,Math.max(...scores)+10);
+  const sx=i=>pad.l+i*(cw/(ciclos.length-1||1));
+  const sy=s=>pad.t+ch-(((s-minS)/(maxS-minS))*ch);
+  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';const tc=isDark?'#9CA3AF':'#6b7280';
+  [30,50,70,90].forEach(v=>{if(v<minS||v>maxS)return;const y=sy(v);ctx.strokeStyle=gc;ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();ctx.fillStyle=tc;ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(v+'%',pad.l-3,y+3);});
+  if(ciclos.length>1){ctx.strokeStyle='#E1F5EE';ctx.lineWidth=1;ctx.setLineDash([4,4]);const my=sy(70);ctx.beginPath();ctx.moveTo(pad.l,my);ctx.lineTo(W-pad.r,my);ctx.stroke();ctx.setLineDash([]);}
+  if(ciclos.length>1){ctx.strokeStyle='#0F6E56';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();ciclos.forEach((c,i)=>i===0?ctx.moveTo(sx(i),sy(c.s)):ctx.lineTo(sx(i),sy(c.s)));ctx.stroke();ctx.fillStyle='rgba(15,110,86,0.07)';ctx.beginPath();ctx.moveTo(sx(0),sy(ciclos[0].s));ciclos.forEach((c,i)=>ctx.lineTo(sx(i),sy(c.s)));ctx.lineTo(sx(ciclos.length-1),H-pad.b);ctx.lineTo(sx(0),H-pad.b);ctx.closePath();ctx.fill();}
+  ciclos.forEach((c,i)=>{ctx.fillStyle='#0F6E56';ctx.beginPath();ctx.arc(sx(i),sy(c.s),4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(sx(i),sy(c.s),2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#0F6E56';ctx.font='500 10px sans-serif';ctx.textAlign='center';ctx.fillText(c.s+'%',sx(i),sy(c.s)-8);});
+
+  const haEl=document.getElementById('hist-areas');haEl.innerHTML='';
+  [{l:'Governança',p:70,c:'#0F6E56'},{l:'Infraestrutura',p:75,c:'#0F6E56'},{l:'Desenvolvimento',p:80,c:'#1D9E75'},{l:'Suporte',p:60,c:'#BA7517'},{l:'Riscos',p:45,c:'#BA7517'},{l:'Segurança',p:40,c:'#E24B4A'}].forEach(a=>haEl.innerHTML+=`<div class="bar-row"><div class="bar-lbl">${a.l}</div><div class="bar-track"><div class="bar-fill" style="width:${a.p}%;background:${a.c}"></div></div><div class="bar-pct">${a.p}%</div></div>`);
+
+  const tbody=document.getElementById('hist-tbody');tbody.innerHTML='';
+  ciclos.forEach((c,i)=>{const prev=i>0?ciclos[i-1].s:null;const delta=prev!==null?c.s-prev:null;const chip=delta!==null?`<span class="badge ${delta>0?'dc-up':delta<0?'dc-dn':'dc-eq'}">${delta>0?'+':''}${delta}%</span>`:`<span class="badge dc-eq">—</span>`;tbody.innerHTML+=`<tr><td>${c.l}</td><td style="color:var(--muted)">${c.d}</td><td style="font-weight:500">${c.s}%</td><td><span class="badge" style="${nivelCor(c.n)}">${c.n}</span></td><td>${chip}</td></tr>`;});
+}
+
+/* ── INIT ── */
+renderQ();initDash();renderHist();
+</script>
+<script src="frontend/frontend-api.js"></script>
+</body>
+</html>
