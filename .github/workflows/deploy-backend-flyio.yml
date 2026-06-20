@@ -44,6 +44,12 @@ jobs:
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only --config fly.toml --app "$FLY_APP_NAME"
 
+      - name: Show Fly status
+        run: flyctl status --app "$FLY_APP_NAME" || true
+
+      - name: Fetch Fly logs
+        run: flyctl logs --app "$FLY_APP_NAME" --no-tail || true
+
       - name: Verify public API
         run: |
           for attempt in 1 2 3 4 5; do
