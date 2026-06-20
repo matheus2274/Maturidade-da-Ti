@@ -43,3 +43,16 @@ jobs:
 
       - name: Deploy to Fly.io
         run: flyctl deploy --remote-only --config fly.toml --app "$FLY_APP_NAME"
+
+      - name: Verify public API
+        run: |
+          for attempt in 1 2 3 4 5; do
+            echo "Verifying backend (attempt $attempt)..."
+            if curl --ipv4 --fail --silent --show-error --max-time 20 "http://$FLY_APP_NAME.fly.dev/api/v1/questoes/listar"; then
+              echo "Backend is reachable."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Backend did not respond after multiple attempts."
+          exit 1
